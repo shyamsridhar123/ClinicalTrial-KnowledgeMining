@@ -39,6 +39,9 @@ data/processing/*
 !data/processing/.gitkeep
 data/vocabulary_cache/*
 !data/vocabulary_cache/.gitkeep
+data/vocabulary_sources/*
+!data/vocabulary_sources/.gitkeep
+data/*.pdf
 db/backups/*.sql
 db/backups/*.dump
 *.db
