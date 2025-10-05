@@ -1,6 +1,12 @@
 # Clinical Trial Knowledge Mining Platform — Technical Requirements Document (Modular-Accelerated Edition)
 
+> **⚠️ IMPORTANT: This is an ASPIRATIONAL specification, not the current implementation.**  
+> **For actual system architecture, see:** [`SYSTEM_ARCHITECTURE.md`](./SYSTEM_ARCHITECTURE.md)  
+> **Modular MAX/Mojo status:** [`MODULAR_MAX_STATUS.md`](./MODULAR_MAX_STATUS.md) — **NOT OPERATIONAL**
+
 > **Purpose**: Define the end-to-end technical requirements for the clinical trial knowledge mining platform, incorporating Modular MAX/Mojo acceleration to achieve sub-10-minute processing for 3000-page documents while maintaining regulatory-grade accuracy and security.
+
+**Current Reality:** System uses PyTorch CUDA + Docling SDK + PostgreSQL. Modular MAX/Mojo features described herein are future considerations, not production code.
 
 ---
 

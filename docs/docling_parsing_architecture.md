@@ -14,13 +14,13 @@ This document captures the design for the multimodal parsing stage that converts
 | --- | --- | --- |
 | Preserve layout hierarchy, formulas, figures | TRD §5.2 "Multimodal Parsing & Extraction"[^1] | Docling SDK GPU pipeline + structured artifact writer |
 | Execute through Pixi-managed environment | TRD §6.1 "Environment Baseline"[^1] | All commands invoked via `pixi run -- …`; docs include reminders |
-| Use Modular MAX with OpenAI-compatible endpoints | TRD §6.2 "Modular MAX Integration"[^1], Modular MAX Quickstart[^2] | MAX retained for text/embedding workloads; parsing client keeps optional health probe |
+| Use Docling SDK directly with PyTorch CUDA | Docling SDK documentation | Direct SDK integration proved faster than HTTP-based serving |
 | Provide OCR fallback for scanned documents | TRD §5.1 "Document Ingestion & Preprocessing"[^1] | Orchestrator integrates Tesseract pipeline |
 | Capture provenance + audit trail | TRD §§7.1 & 10 | Provenance records alongside artefacts |
 | Output ready for vectorization | TRD §5.4 | Chunk manifest recorded for downstream embedding stage |
 
 [^1]: *Clinical Trial Knowledge Mining Platform — Technical Requirements Document (Modular-Accelerated Edition)*.
-[^2]: Modular MAX Quickstart, "Start a model endpoint" and "Run inference with the endpoint" (<https://docs.modular.com/max/get-started/>)
+[^2]: PyTorch CUDA Documentation (<https://pytorch.org/docs/stable/cuda.html>)
 
 ## High-Level Data Flow
 
@@ -42,7 +42,7 @@ This document captures the design for the multimodal parsing stage that converts
 - Features:
   - Configurable pipeline options (table extraction, OCR toggle, image generation) exposed via `ParsingSettings`.
   - Automatic device selection (prefers CUDA) and logging of the active GPU per Modular guidance.
-  - Optional MAX health probes retained for operators who still run the MAX server for auxiliary tasks.
+  - GPU availability checks via PyTorch CUDA detection.
   - Response validation to detect parse success vs. structured error payloads.
   - Automatic retry with a table-structure-disabled converter when Docling triggers the upstream `basic_string::at` bug; metadata captures the fallback type for downstream awareness.
 

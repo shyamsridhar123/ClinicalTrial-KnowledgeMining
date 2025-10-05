@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Production-Ready AGE Property Graph Synchronization
+AGE Property Graph Synchronization
 
 Uses chunked batch processing with proper error handling and transaction management
 for scalable deployment with thousands of entities.
@@ -38,7 +38,7 @@ def _resolve_connection_string(explicit: Optional[str] = None) -> str:
 
 
 class ProductionAGESync:
-    """Production-ready AGE synchronization with batch processing"""
+    """AGE synchronization with batch processing (development version)"""
     
     def __init__(self, connection_string: Optional[str] = None, batch_size: int = 50):
         self.connection_string = _resolve_connection_string(connection_string)
@@ -296,7 +296,7 @@ async def main():
         print("=" * 50)
         print(f"Graph vertices: {stats.get('vertices', 0)}")
         print(f"Graph edges: {stats.get('edges', 0)}")
-        print("Ready for production queries! 🚀")
+        print("Graph synchronization complete! 🚀")
         
         return 0
         

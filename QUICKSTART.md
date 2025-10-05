@@ -1,5 +1,9 @@
 # DocIntel Quick Start Guide
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/shyamsridhar123/ClinicalTrial-KnowledgeMining)
+[![Documentation](https://img.shields.io/badge/docs-available-brightgreen.svg)](docs/README.md)
+[![Development Status](https://img.shields.io/badge/status-active%20development-yellow.svg)](https://github.com/shyamsridhar123/ClinicalTrial-KnowledgeMining)
+
 ## 🎯 Main Interface: Query Clinical Trials
 
 ### Basic Usage
@@ -34,26 +38,18 @@ pixi run -- python query_clinical_trials.py "What are the primary endpoints?"
 
 ---
 
-## 📊 System Architecture
+## 📊 System Status (Verified Oct 5, 2025)
 
+- **15 NCT Studies** indexed and searchable
+- **3,735 Embeddings** (text/tables/figures)
+- **37,657 Entities** with UMLS/SNOMED/RxNorm normalization
+- **5,266 Relations** for graph-aware retrieval
+- **3.2M Vocabulary Terms** cached locally
+
+**Query Pipeline:**
 ```
-User Question
-    ↓
-[BiomedCLIP Embedding]
-    ↓
-[pgvector Semantic Search] → 3,735 embeddings (text/tables/figures)
-    ↓
-[Top-K Relevant Chunks]
-    ↓
-[Entity Retrieval] → 37,657 entities via source_chunk_id linkage
-    ↓
-[Clinical Normalization] → UMLS/LOINC/RxNorm/SNOMED (3.2M concepts)
-    ↓
-[Context Assembly] → Text + Entities + Normalized Concepts
-    ↓
-[Azure GPT-4.1] → Synthesis & Generation
-    ↓
-Answer with NCT Citations
+User Query → BiomedCLIP → pgvector Search → U-Retrieval (graph expansion) 
+→ Context Assembly → GPT-4.1 → Answer + Citations
 ```
 
 ---
@@ -225,17 +221,17 @@ pixi install
 
 ## 📈 System Metrics
 
-### Current Data
-- **Embeddings**: 3,735 (3,214 text chunks, 284 tables, 212 figures, 25 captions)
-- **Entities**: 37,657 (100% normalized)
-- **NCTs**: 14 clinical trials
-- **Vocabularies**: 3.2M terms (UMLS, LOINC, RxNorm, SNOMED)
-- **Meta-graphs**: 426 knowledge graphs
+### Current Data (Verified Oct 5, 2025)
+- **15 NCT Studies** fully indexed
+- **3,735 Embeddings** (text chunks, tables, figures, captions)
+- **37,657 Entities** (medications, conditions, procedures, adverse events)
+- **5,266 Relations** for knowledge graph traversal
+- **3.2M Vocabulary Terms** (UMLS, LOINC, RxNorm, SNOMED-CT)
 
 ### Performance
-- **Query latency**: ~2-3 seconds (embedding + search + LLM)
-- **Semantic search**: Sub-second pgvector similarity
-- **Entity retrieval**: Instant via source_chunk_id index
+- **Query latency**: ~3-6 seconds (embedding + U-Retrieval + GPT-4.1)
+- **Semantic search**: <100ms (pgvector)
+- **Graph expansion**: ~100ms (1-hop relations)
 
 ---
 
@@ -277,4 +273,18 @@ Review `logs/` for execution history and debug information.
 
 ---
 
-Last updated: October 2, 2025
+## 📚 Documentation
+
+- **System Architecture:** `docs/SYSTEM_ARCHITECTURE.md`
+- **Modular MAX/Mojo Status:** `docs/MODULAR_MAX_STATUS.md` ⚠️ **NOT OPERATIONAL**
+- **Query System:** `docs/QUERY_ARCHITECTURE.md`
+- **U-Retrieval:** `docs/URETRIEVAL_ARCHITECTURE.md`
+- **Entity Normalization:** `docs/ENTITY_NORMALIZATION_GUIDE.md`
+- **Query Rewriting:** `docs/QUERY_REWRITING_GUIDE.md`
+- **CLI Reference:** `CLI_GUIDE.md`
+
+**Note:** The TRD mentions Modular MAX/Mojo but these are NOT operational. See MODULAR_MAX_STATUS.md for details.
+
+---
+
+**Last Updated:** October 5, 2025

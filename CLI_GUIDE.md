@@ -1,5 +1,9 @@
 # DocIntel CLI User Guide
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/shyamsridhar123/ClinicalTrial-KnowledgeMining)
+[![CLI](https://img.shields.io/badge/interface-CLI-blue.svg)](CLI_GUIDE.md)
+[![Interactive](https://img.shields.io/badge/mode-interactive-brightgreen.svg)](CLI_GUIDE.md)
+
 ## Overview
 The DocIntel CLI provides a comprehensive interactive menu for managing the entire clinical trial knowledge mining pipeline.
 
@@ -59,6 +63,7 @@ python -m docintel.cli
 
 **7. Semantic search (Ask questions)** ⭐ NEW
 - **Context-aware Q&A** with GPT-4.1
+- **Intelligent query rewriting**: Automatically expands short queries like "What is X?" for better results
 - Uses U-Retrieval (hierarchical graph-aware retrieval)
 - **Automatically shows clinical context flags** in results:
   - ❌ NEGATED - "no evidence of X"
@@ -182,13 +187,13 @@ pixi run -- nvidia-smi
 pixi run -- python -c "import torch; print(f'CUDA: {torch.cuda.is_available()}')"
 ```
 
-### Modular MAX server not running
+### Database connection issues
 ```bash
-# Start MAX server manually
-pixi run -- bash scripts/start_max_server.sh
+# Check PostgreSQL container status
+docker ps | grep postgres
 
-# Verify server is running
-curl http://localhost:8000/v1/models
+# Verify database connection
+pixi run -- python -c "import psycopg; psycopg.connect('$DOCINTEL_VECTOR_DB_DSN')"
 ```
 
 ### Query returning "no results"
@@ -302,6 +307,12 @@ Enter option: 0
 ```
 
 ## What's New (Latest Version)
+
+### Intelligent Query Rewriting ⭐ NEW
+- **Automatic expansion** of short queries like "What is niraparib?" → "Define niraparib. Niraparib mechanism..."
+- **Fixes poor semantic discrimination** (all chunks getting identical 0.663 scores)
+- **Improves answer quality** for definitional questions
+- See `docs/query_rewriting_guide.md` for details
 
 ### Context-Aware Query System ⭐
 - **Visual context annotations** in query results (❌📅🤔❓👨‍👩‍👧)

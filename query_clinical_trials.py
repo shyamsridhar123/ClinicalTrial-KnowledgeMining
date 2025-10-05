@@ -19,6 +19,7 @@ from openai import AzureOpenAI
 from docintel.embeddings.client import EmbeddingClient
 from docintel.config import EmbeddingSettings, AzureOpenAISettings
 from docintel.knowledge_graph.u_retrieval import ClinicalURetrieval, QueryType, SearchScope
+from docintel.query import QueryRewriter
 
 
 class ClinicalTrialQA:
@@ -29,6 +30,7 @@ class ClinicalTrialQA:
         self.embedding_client = None
         self.llm_client = None
         self.azure_settings = None
+        self.query_rewriter = QueryRewriter(enable_rewriting=True)
         
     async def initialize(self):
         """Initialize embedding and LLM clients."""
@@ -71,10 +73,22 @@ class ClinicalTrialQA:
                 'total_entities': int,
                 'unique_ncts': [str],
                 'graph_expanded_count': int,
-                'processing_time_ms': float
+                'processing_time_ms': float,
+                'original_query': str,
+                'rewritten_query': str (if rewritten)
             }
         """
-        print(f"🔍 Query: {query}")
+        # Apply query rewriting for better semantic search
+        original_query = query
+        rewritten_query = self.query_rewriter.rewrite(query)
+        
+        # Show rewriting explanation if query was changed
+        explanation = self.query_rewriter.explain_rewrite(original_query, rewritten_query)
+        if explanation:
+            print(explanation)
+            print()
+        
+        print(f"🔍 Query: {rewritten_query if rewritten_query != original_query else query}")
         print(f"📊 Using U-Retrieval with graph expansion (max_results={top_k})...\n")
         
         # Use U-Retrieval for hierarchical entity search with graph expansion
@@ -82,8 +96,9 @@ class ClinicalTrialQA:
         
         query_type = QueryType.HYBRID_SEARCH if use_graph_expansion else QueryType.ENTITY_SEARCH
         
+        # Use rewritten query for actual search
         u_result = await u_retrieval.u_retrieval_search(
-            query=query,
+            query=rewritten_query,
             query_type=query_type,
             search_scope=SearchScope.GLOBAL,
             max_results=top_k
@@ -182,7 +197,9 @@ class ClinicalTrialQA:
             'total_entities': len(entities),
             'unique_ncts': unique_ncts,
             'graph_expanded_count': graph_expanded_count,
-            'processing_time_ms': u_result.processing_time_ms
+            'processing_time_ms': u_result.processing_time_ms,
+            'original_query': original_query,
+            'rewritten_query': rewritten_query if rewritten_query != original_query else None
         }
     
     def _load_chunk_text(self, source_path: str, chunk_id: str) -> str:
