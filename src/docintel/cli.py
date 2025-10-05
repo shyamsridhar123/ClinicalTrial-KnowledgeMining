@@ -274,7 +274,7 @@ def _run_semantic_search_interactive() -> None:
         return
     
     # Optional parameters
-    max_results = _prompt_int("Maximum results", default=5, minimum=1)
+    max_results = _prompt_int("Maximum results", default=50, minimum=1)
     
     # Run the query using the enhanced query system
     print(f"\n➡️  Searching for: {query_text}")

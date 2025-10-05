@@ -102,9 +102,10 @@ class ClinicalURetrieval:
     - Clinical domain expertise for relevance scoring
     """
     
-    def __init__(self, connection_string: str):
+    def __init__(self, connection_string: str, embedding_client=None):
         self.connection_string = connection_string
         self.conn = None
+        self.embedding_client = embedding_client  # For semantic vector search fallback
         
         # Clinical relevance weights for different entity types
         self.entity_type_weights = {
@@ -559,6 +560,37 @@ class ClinicalURetrieval:
         entities_with_relations = sum(1 for e in entities if e[10] > 0)  # relation_count is column 10
         logger.info(f"Found {len(entities)} entities from {len(meta_graph_ids)} meta_graphs ({entities_with_relations} have relations)")
         
+        # SEMANTIC FALLBACK: If entity search returns few results, add vector similarity search
+        if len(entities) < max_results // 2 and self.embedding_client is not None:
+            logger.info(f"Entity search returned only {len(entities)} results, adding semantic vector search")
+            
+            try:
+                # Generate query embedding
+                query_emb_response = await self.embedding_client.embed_texts([query])
+                query_embedding = query_emb_response[0].embedding
+                
+                # Vector similarity search (get relevant NCTs from communities first)
+                relevant_ncts = set()
+                for community in relevant_communities:
+                    for meta_graph_id in community['nodes']:
+                        # Extract NCT from meta_graph if available
+                        pass  # Will get NCTs from chunks below
+                
+                # Run vector search across all chunks (not just community-filtered)
+                vector_results = await self._vector_similarity_search(
+                    query_embedding, 
+                    meta_graph_ids=meta_graph_list if len(entities) == 0 else None,  # Filter by communities if entity search completely failed
+                    max_results=max_results
+                )
+                
+                logger.info(f"Semantic search found {len(vector_results)} additional chunk matches")
+                
+                # Merge vector results into entity results
+                entities = list(entities) + vector_results
+                
+            except Exception as exc:
+                logger.error(f"Semantic vector search failed: {exc}", exc_info=True)
+        
         # Build results with community context
         for entity in entities:
             (entity_id, entity_text, entity_type, confidence, normalized_id, 
@@ -603,6 +635,107 @@ class ClinicalURetrieval:
         
         logger.info(f"Returning {len(search_results)} entities matching query")
         return search_results
+    
+    async def _vector_similarity_search(
+        self,
+        query_embedding: List[float],
+        meta_graph_ids: Optional[List[str]] = None,
+        max_results: int = 20
+    ) -> List[tuple]:
+        """
+        Perform semantic vector similarity search using pgvector.
+        
+        Args:
+            query_embedding: 512-dim query embedding from BiomedCLIP
+            meta_graph_ids: Optional filter by meta_graph IDs (for community-aware search)
+            max_results: Maximum number of chunks to return
+            
+        Returns:
+            List of tuples matching entity search format: (entity_id, entity_text, entity_type, ...)
+            Returns chunk-level "pseudo-entities" that can be merged with entity results
+        """
+        # Convert embedding to PostgreSQL vector format
+        embedding_str = '[' + ','.join(str(x) for x in query_embedding) + ']'
+        
+        # Build query with optional meta_graph filter
+        if meta_graph_ids:
+            # Get chunks from specific meta_graphs (community-filtered)
+            mg_placeholders = ','.join(['%s'] * len(meta_graph_ids))
+            
+            # First get source_chunk_ids from entities in these meta_graphs
+            chunk_query = f"""
+                SELECT DISTINCT source_chunk_id
+                FROM docintel.entities
+                WHERE meta_graph_id::text IN ({mg_placeholders})
+                AND source_chunk_id IS NOT NULL
+            """
+            result = await self.conn.execute(chunk_query, meta_graph_ids)
+            chunk_rows = await result.fetchall()
+            chunk_ids = [row[0] for row in chunk_rows if row[0]]
+            
+            if not chunk_ids:
+                logger.warning("No chunk IDs found for meta_graphs, falling back to global search")
+                meta_graph_ids = None  # Fall through to global search
+            else:
+                chunk_placeholders = ','.join(['%s'] * len(chunk_ids))
+                vector_query = f"""
+                    SELECT 
+                        chunk_id,
+                        nct_id,
+                        chunk_text,
+                        embedding <=> %s::vector AS distance,
+                        1 - (embedding <=> %s::vector) / 2 AS similarity_score
+                    FROM docintel.embeddings
+                    WHERE chunk_id IN ({chunk_placeholders})
+                    ORDER BY embedding <=> %s::vector
+                    LIMIT %s
+                """
+                params = [embedding_str, embedding_str] + chunk_ids + [embedding_str, max_results]
+        
+        if not meta_graph_ids:
+            # Global semantic search (no community filter)
+            vector_query = """
+                SELECT 
+                    chunk_id,
+                    nct_id,
+                    chunk_text,
+                    embedding <=> %s::vector AS distance,
+                    1 - (embedding <=> %s::vector) / 2 AS similarity_score
+                FROM docintel.embeddings
+                ORDER BY embedding <=> %s::vector
+                LIMIT %s
+            """
+            params = [embedding_str, embedding_str, embedding_str, max_results]
+        
+        result = await self.conn.execute(vector_query, params)
+        chunks = await result.fetchall()
+        
+        logger.info(f"Vector search found {len(chunks)} semantically similar chunks")
+        
+        # Convert chunks to pseudo-entity format for merging with entity results
+        # Format: (entity_id, entity_text, entity_type, confidence, normalized_id, 
+        #          normalized_source, context_flags, chunk_id, source_chunk_id, meta_graph_id, relation_count)
+        pseudo_entities = []
+        
+        for chunk_id, nct_id, chunk_text, distance, similarity_score in chunks:
+            # Create a pseudo-entity representing this chunk
+            # Use chunk_id as both entity_id and source_chunk_id
+            pseudo_entity = (
+                chunk_id,  # entity_id (actually chunk_id)
+                f"[SEMANTIC] {chunk_text[:100]}...",  # entity_text (preview)
+                "semantic_chunk",  # entity_type (special type for vector results)
+                similarity_score,  # confidence (use similarity as confidence)
+                None,  # normalized_id
+                "semantic_search",  # normalized_source
+                {},  # context_flags
+                chunk_id,  # chunk_id
+                chunk_id,  # source_chunk_id
+                None,  # meta_graph_id (unknown)
+                0  # relation_count
+            )
+            pseudo_entities.append(pseudo_entity)
+        
+        return pseudo_entities
     
     def _calculate_entity_relevance_score(
         self,

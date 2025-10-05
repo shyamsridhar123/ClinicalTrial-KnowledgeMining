@@ -15,11 +15,12 @@ sys.path.insert(0, 'src')
 
 import psycopg
 from psycopg.rows import dict_row
-from openai import AzureOpenAI
 from docintel.embeddings.client import EmbeddingClient
-from docintel.config import EmbeddingSettings, AzureOpenAISettings
+from docintel.config import EmbeddingSettings
 from docintel.knowledge_graph.u_retrieval import ClinicalURetrieval, QueryType, SearchScope
 from docintel.query import QueryRewriter
+from docintel.query.model_router import get_router, ModelChoice
+from docintel.query.llm_client import get_llm_client
 
 
 class ClinicalTrialQA:
@@ -29,11 +30,11 @@ class ClinicalTrialQA:
         self.db_dsn = "postgresql://dbuser:dbpass123@localhost:5432/docintel"
         self.embedding_client = None
         self.llm_client = None
-        self.azure_settings = None
+        self.router = None
         self.query_rewriter = QueryRewriter(enable_rewriting=True)
         
     async def initialize(self):
-        """Initialize embedding and LLM clients."""
+        """Initialize embedding, router, and LLM clients."""
         print("🔧 Initializing system...")
         
         # Load embedding client
@@ -41,20 +42,11 @@ class ClinicalTrialQA:
         self.embedding_client = EmbeddingClient(embedding_settings)
         print("  ✅ BiomedCLIP embedding model loaded")
         
-        # Load Azure OpenAI client
-        self.azure_settings = AzureOpenAISettings()
-        api_key = self.azure_settings.api_key
-        if hasattr(api_key, 'get_secret_value'):
-            api_key = api_key.get_secret_value()
-        
-        endpoint = str(self.azure_settings.endpoint)
-        
-        self.llm_client = AzureOpenAI(
-            api_key=api_key,
-            api_version=self.azure_settings.api_version,
-            azure_endpoint=endpoint
-        )
-        print(f"  ✅ Azure OpenAI GPT-4.1 connected ({self.azure_settings.deployment_name})")
+        # Load model router and LLM client
+        # FEATURE FLAG: disable_routing=True to always use GPT-4.1 (fixes adverse events extraction)
+        self.router = get_router(disable_routing=True)
+        self.llm_client = get_llm_client()
+        print("  ✅ Model router initialized (GPT-4.1 only - routing disabled)")
         print()
     
     async def retrieve_context(self, query: str, top_k: int = 50, use_graph_expansion: bool = True) -> dict:
@@ -92,7 +84,8 @@ class ClinicalTrialQA:
         print(f"📊 Using U-Retrieval with graph expansion (max_results={top_k})...\n")
         
         # Use U-Retrieval for hierarchical entity search with graph expansion
-        u_retrieval = ClinicalURetrieval(self.db_dsn)
+        # Pass embedding_client to enable semantic vector search fallback
+        u_retrieval = ClinicalURetrieval(self.db_dsn, embedding_client=self.embedding_client)
         
         query_type = QueryType.HYBRID_SEARCH if use_graph_expansion else QueryType.ENTITY_SEARCH
         
@@ -250,15 +243,19 @@ class ClinicalTrialQA:
         # Step 2: Build prompt with context
         prompt = self._build_prompt(query, context)
         
-        # Step 3: Call LLM
-        print("🤖 Generating answer with GPT-4.1...\n")
+        # Step 3: Route query to appropriate model
+        routing_decision = self.router.route(
+            query_text=query,
+            images=None,  # No image input for this query type
+            context_docs=[c['text'] for c in context['chunks']]
+        )
         
-        response = self.llm_client.chat.completions.create(
-            model=self.azure_settings.deployment_name,
-            messages=[
-                {
-                    "role": "system",
-                    "content": """You are a clinical research assistant analyzing clinical trial data.
+        model_name = "GPT-5-mini" if routing_decision.model == ModelChoice.GPT_5_MINI else "GPT-4.1"
+        print(f"🤖 Generating answer with {model_name}...")
+        print(f"   Routing reason: {routing_decision.reason}\n")
+        
+        # Step 4: Call LLM with routed model
+        system_message = """You are a clinical research assistant analyzing clinical trial data.
 Answer questions accurately based on the provided context.
 Always cite specific NCT IDs when making claims.
 If information is not in the context, say so clearly.
@@ -271,19 +268,24 @@ IMPORTANT - Clinical Context Flags:
 - 👨‍👩‍👧FAMILY: Family medical history, not about the patient.
 
 When entities are marked with these flags, clearly indicate the context in your answer."""
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
+        
+        # GPT-5-mini needs more tokens because reasoning tokens count toward max_tokens
+        # For reasoning models: max_tokens = reasoning_tokens + output_tokens
+        max_tokens = 8000 if routing_decision.model == ModelChoice.GPT_5_MINI else 1000
+        
+        response = self.llm_client.query(
+            model=routing_decision.model,
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": prompt}
             ],
             temperature=0.1,
-            max_tokens=1000
+            max_tokens=max_tokens
         )
         
-        answer = response.choices[0].message.content
+        answer = response.content
         
-        # Step 4: Build response
+        # Step 5: Build response
         sources = [
             {
                 'nct_id': c['nct_id'],
@@ -301,7 +303,9 @@ When entities are marked with these flags, clearly indicate the context in your 
             'entities_found': context['total_entities'],
             'graph_expanded_count': context.get('graph_expanded_count', 0),
             'ncts_searched': context['unique_ncts'],
-            'processing_time_ms': context.get('processing_time_ms', 0)
+            'processing_time_ms': context.get('processing_time_ms', 0),
+            'model_used': routing_decision.model.value,
+            'routing_reason': routing_decision.reason
         }
     
     def _build_prompt(self, query: str, context: dict) -> str:
@@ -395,6 +399,7 @@ When entities are marked with these flags, clearly indicate the context in your 
         
         print(f"\n📊 Searched {len(result['ncts_searched'])} NCTs")
         print(f"   Found {result['entities_found']} entities ({result.get('graph_expanded_count', 0)} via graph expansion)")
+        print(f"   🤖 Model: {result.get('model_used', 'unknown')} ({result.get('routing_reason', 'unknown')})")
         print(f"   ⏱️  Processing time: {result.get('processing_time_ms', 0):.1f}ms")
         print("=" * 80)
 
