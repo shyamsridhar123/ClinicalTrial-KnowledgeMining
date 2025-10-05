@@ -1,0 +1,54 @@
+-- Reference migration for DocIntel pgvector schema.
+-- The automated migrator composes this DDL dynamically to honour configured schema names
+-- and embedding dimensions. Apply using `pixi run -- python -m docintel.db.migrate`.
+
+-- CREATE EXTENSION IF NOT EXISTS vector;
+-- CREATE SCHEMA IF NOT EXISTS docintel;
+-- CREATE TABLE IF NOT EXISTS docintel.embeddings (
+--     embedding_id BIGSERIAL PRIMARY KEY,
+--     nct_id TEXT NOT NULL,
+--     document_name TEXT NOT NULL,
+--     chunk_id TEXT NOT NULL,
+--     segment_index INTEGER NOT NULL DEFAULT 0,
+--     segment_count INTEGER NOT NULL DEFAULT 1,
+--     section TEXT,
+--     token_count INTEGER,
+--     char_count INTEGER,
+--     start_word_index INTEGER,
+--     study_phase TEXT,
+--     therapeutic_area TEXT,
+--     document_type TEXT,
+--     population TEXT,
+--     endpoint_type TEXT,
+--     page_reference INTEGER,
+--     artefact_type TEXT,
+--     source_path TEXT,
+--     parent_chunk_id TEXT,
+--     metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+--     embedding vector(512) NOT NULL,
+--     embedding_model TEXT NOT NULL,
+--     quantization_encoding TEXT NOT NULL DEFAULT 'none',
+--     quantization_storage_dtype TEXT,
+--     quantization_scale DOUBLE PRECISION,
+--     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+--     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+-- );
+-- CREATE UNIQUE INDEX IF NOT EXISTS docintel_embeddings_chunk_uidx
+--     ON docintel.embeddings (nct_id, document_name, chunk_id);
+-- CREATE INDEX IF NOT EXISTS docintel_embeddings_meta_idx
+--     ON docintel.embeddings (therapeutic_area, study_phase, document_type);
+-- CREATE INDEX IF NOT EXISTS docintel_embeddings_metadata_gin
+--     ON docintel.embeddings USING gin (metadata jsonb_path_ops);
+-- CREATE INDEX IF NOT EXISTS docintel_embeddings_embedding_hnsw
+--     ON docintel.embeddings USING hnsw (embedding vector_cosine_ops);
+-- CREATE OR REPLACE FUNCTION docintel.set_updated_at()
+-- RETURNS trigger AS $$
+-- BEGIN
+--     NEW.updated_at = NOW();
+--     RETURN NEW;
+-- END;
+-- $$ LANGUAGE plpgsql;
+-- CREATE TRIGGER embeddings_set_updated_at
+--     BEFORE UPDATE ON docintel.embeddings
+--     FOR EACH ROW
+--     EXECUTE FUNCTION docintel.set_updated_at();

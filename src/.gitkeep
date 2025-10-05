@@ -1,0 +1,22 @@
+# Placeholder for main platform source code
+# 
+# This directory will contain:
+# - Document processing pipeline using IBM Granite Docling 258M
+# - Clinical NLP modules with scispaCy/medspaCy
+# - Vector database integration (ChromaDB/Qdrant)
+# - REST API endpoints
+# - Knowledge graph construction
+# - Web interface components
+
+# Future structure:
+# src/
+# ├── ct_mining/              # Main package
+# │   ├── __init__.py
+# │   ├── document_processor/  # Document processing pipeline
+# │   ├── nlp/                # Clinical NLP modules
+# │   ├── vector_db/          # Vector database integration
+# │   ├── api/                # REST API endpoints
+# │   ├── knowledge_graph/    # Knowledge graph construction
+# │   └── web/                # Web interface
+# ├── config/                 # Configuration modules
+# └── utils/                  # Shared utilities

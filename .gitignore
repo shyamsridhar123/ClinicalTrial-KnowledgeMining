@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Environment
+.env
+.env.local
+*.env
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Models & Cache
+models/*
+!models/.gitkeep
+!models/README.md
+.pixi/
+*.gguf
+*.safetensors
+
+# Data & Databases
+data/ingestion/*
+!data/ingestion/.gitkeep
+data/processing/*
+!data/processing/.gitkeep
+data/vocabulary_cache/*
+!data/vocabulary_cache/.gitkeep
+db/backups/*.sql
+db/backups/*.dump
+*.db
+*.sqlite
+*.sqlite3
+
+# Outputs & Logs
+logs/*.json
+logs/debug/*
+!logs/debug/.gitkeep
+output/extractions/*
+!output/extractions/.gitkeep
+output/reports/*
+!output/reports/.gitkeep
+*.log.*
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# MCP & Secrets
+mcp-config.json
+secrets/
+credentials/
+

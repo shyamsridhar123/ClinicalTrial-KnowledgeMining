@@ -1,0 +1,25 @@
+📋 VOCABULARY FILES VALIDATION REPORT
+====================================
+
+✅ UMLS Files:
+   ✓ MRCONSO.RRF (908 MB) - Concepts and names [REQUIRED]
+   ✓ MRSTY.RRF (151 MB) - Semantic types [RECOMMENDED]
+   ✗ MRREL.RRF - Relationships [OPTIONAL - Not present]
+
+✅ RxNorm Files:
+   ✓ RXNCONSO.RRF (124 MB) - Drug concepts [REQUIRED]
+   ✓ RXNREL.RRF (92 MB) - Drug relationships [RECOMMENDED]
+
+✅ SNOMED Files:
+   ✓ sct2_Concept_Full_US1000124_20250901.txt (42 MB) [REQUIRED]
+   ✓ sct2_Description_Full-en_US1000124_20250901.txt (371 MB) [REQUIRED]
+   ✗ sct2_Relationship_*.txt [OPTIONAL - Not present]
+
+📊 Summary:
+   • All REQUIRED files present: ✅
+   • Total size: ~1.6 GB
+   • Ready for ingestion: YES
+   
+⚠️  Note: Optional relationship files (MRREL.RRF, sct2_Relationship) not present.
+   This is fine - you'll get full entity normalization without UMLS/SNOMED edges.
+   You already have 4,435 relationships extracted from GPT-4.1.

@@ -1,0 +1,74 @@
+{
+  "question": "What is niraparib and how  should niraparib be administered and what are the observed adverse effects?",
+  "answer": "**What is niraparib?**\n\nNiraparib is an oral poly(ADP-ribose) polymerase (PARP) inhibitor used in the treatment of certain cancers, particularly those with homologous recombination defects such as BRCA mutations. It works by inhibiting DNA repair mechanisms, leading to synthetic lethality in cancer cells with these defects (NCT03840967).\n\n---\n\n**How should niraparib be administered?**\n\n- **Dosage and Administration:**  \n  - Niraparib is administered orally, once daily.\n  - The recommended starting dose is **300 mg (3 x 100 mg capsules)** for patients with baseline weight \u226577 kg and platelet count \u2265150,000/\u00b5L. For those with lower weight or platelet count, a reduced starting dose may be used (NCT03840967).\n  - Capsules should be swallowed whole and not opened, crushed, or chewed.\n  - Niraparib can be taken with or without food, as food does not significantly affect absorption.\n  - If a dose is missed by more than 12 hours, the missed dose should be skipped and the next dose taken at the regular time.\n  - Vomited doses should not be made up.\n  - Bedtime administration may help manage nausea (NCT03840967).\n\n---\n\n**What are the observed adverse effects?**\n\n- **Common Adverse Effects (\u226520% of patients):**  \n  - The following adverse reactions have been reported in \u226520% of patients receiving niraparib (NCT03840967):\n    - Nausea\n    - Fatigue\n    - Thrombocytopenia (low platelet count)\n    - Anemia\n    - Constipation\n    - Vomiting\n    - Insomnia\n    - Headache\n    - Decreased appetite\n\n- **Serious Adverse Effects:**  \n  - Myelodysplastic syndrome (MDS) and acute myeloid leukemia (AML) have been observed in patients receiving niraparib, though the incidence is low (1.4% in niraparib vs. 1.1% in placebo in the NOVA trial, NCT03840967).\n  - No clinically significant abnormal ECG changes, including QTc interval prolongation, were attributed to niraparib in a dedicated substudy (NCT03840967).\n\n---\n\n**Summary Table: Niraparib Administration and Adverse Effects (NCT03840967)**\n\n| Aspect                  | Details                                                                                  |\n|-------------------------|-----------------------------------------------------------------------------------------|\n| Drug                    | Niraparib (oral PARP inhibitor)                                                         |\n| Administration          | Oral, once daily, 300 mg (or reduced dose based on weight/platelets), with/without food |\n| Key Instructions        | Swallow whole, do not crush/chew, skip missed/vomited doses, bedtime may help nausea    |\n| Common Adverse Effects  | Nausea, fatigue, thrombocytopenia, anemia, constipation, vomiting, insomnia, headache   |\n| Serious Adverse Effects | MDS/AML (rare), no significant QTc prolongation                                         |\n\n**References:**  \n- NCT03840967 (multiple protocol sections and safety data)\n- NCT03840967 (NOVA trial results and adverse event reporting)\n\nIf you need information from other NCT IDs or about other indications, please specify.",
+  "sources": [
+    {
+      "nct_id": "NCT04560335",
+      "document": "ICF_000.json",
+      "similarity": 1.992,
+      "entities": 3
+    },
+    {
+      "nct_id": "NCT03799627",
+      "document": "Prot_000.json",
+      "similarity": 1.236,
+      "entities": 2
+    },
+    {
+      "nct_id": "NCT03840967",
+      "document": "Prot_SAP_000.json",
+      "similarity": 2.748,
+      "entities": 1
+    },
+    {
+      "nct_id": "NCT03840967",
+      "document": "Prot_SAP_000.json",
+      "similarity": 2.748,
+      "entities": 1
+    },
+    {
+      "nct_id": "NCT03840967",
+      "document": "Prot_SAP_000.json",
+      "similarity": 2.748,
+      "entities": 1
+    },
+    {
+      "nct_id": "NCT03840967",
+      "document": "Prot_SAP_000.json",
+      "similarity": 2.748,
+      "entities": 1
+    },
+    {
+      "nct_id": "NCT03840967",
+      "document": "Prot_SAP_000.json",
+      "similarity": 2.748,
+      "entities": 1
+    },
+    {
+      "nct_id": "NCT03840967",
+      "document": "Prot_SAP_000.json",
+      "similarity": 2.748,
+      "entities": 1
+    },
+    {
+      "nct_id": "NCT03840967",
+      "document": "Prot_SAP_000.json",
+      "similarity": 2.37,
+      "entities": 1
+    },
+    {
+      "nct_id": "NCT03840967",
+      "document": "Prot_SAP_000.json",
+      "similarity": 2.37,
+      "entities": 1
+    }
+  ],
+  "entities_found": 50,
+  "graph_expanded_count": 0,
+  "ncts_searched": [
+    "NCT04560335",
+    "NCT03799627",
+    "NCT03840967"
+  ],
+  "processing_time_ms": 9041.176777012879
+}
